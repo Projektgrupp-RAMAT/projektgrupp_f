@@ -13,10 +13,11 @@ public class myCORSFilter implements ContainerResponseFilter {
 
 	@Override
 	public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
+		
 		response.getHttpHeaders().putSingle("Access-Control-Allow-Origin", "*");
-		response.getHttpHeaders().putSingle("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-		response.getHttpHeaders().putSingle("Access-Control-Allow-Headers", "Content-Type, X-Requested-With");
+		response.getHttpHeaders().putSingle("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+		response.getHttpHeaders().putSingle("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, Accept, Authentication");
+		
 		return response;
 	}
-
 }

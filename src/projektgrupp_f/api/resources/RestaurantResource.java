@@ -38,6 +38,7 @@ public class RestaurantResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Restaurant> getRestaurants(@QueryParam("name") String name, @QueryParam("address") String address, @QueryParam("userId") String userId, 
 											@QueryParam("userName") String userName, @QueryParam("soundLvl") String soundLvl) {
+		
 		if(name == null && address == null && userId == null && userName == null && soundLvl == null)
 			return dao.getRestaurants();
 		else
