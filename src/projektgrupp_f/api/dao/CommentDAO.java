@@ -14,6 +14,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
@@ -32,18 +33,23 @@ public class CommentDAO {
 	public List<Comment> getComments() {
 
 		List<Comment> list = new ArrayList<Comment>();
+		DBObject dbo;
+		Comment cmnt;
 		
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
-			System.out.println(db.isAuthenticated());
+			System.out.println("Authenticated: " + db.isAuthenticated());
 			coll = db.getCollection("comments");
 			gson = new Gson();
 			cursor = coll.find();
 			
-			while(cursor.hasNext()) 
-				list.add((Comment)gson.fromJson(cursor.next().toString(), Comment.class));
-			
+			while(cursor.hasNext()) {
+				dbo = cursor.next();
+				cmnt = (Comment)gson.fromJson(dbo.toString(), Comment.class);
+				cmnt.setId(dbo.get("_id").toString());
+				list.add(cmnt);
+			}
 		} catch (UnknownHostException e) {
 			
 			e.printStackTrace();
@@ -65,7 +71,7 @@ public class CommentDAO {
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
+			coll = db.getCollection("comments");
 			gson = new Gson();
 			query = new BasicDBObject("_id", new ObjectId(commentId));
 			cursor = coll.find(query);
@@ -83,7 +89,6 @@ public class CommentDAO {
 			cursor.close();
 			ConnectionMongoDB.closeConnection();
 		}
-		
 		return comment;
 	}
 	
@@ -109,14 +114,14 @@ public class CommentDAO {
 			else if(userId == null && userName == null && soundLvl == null && restaurantId == null && flagged == null)
 				query.put("text", text);
 			else if(userId == null && userName == null && soundLvl == null && text == null && restaurantId == null)
-				query.put("flagged", flagged);
+				query.put("flagged", Boolean.parseBoolean(flagged));
 			else {
 				query.put("restaurantId", restaurantId);
 				query.put("userId", userId);
 				query.put("userName", userName);
 				query.put("soundLvl", soundLvl);
 				query.put("text", text);
-				query.put("flagged", flagged);
+				query.put("flagged", Boolean.parseBoolean(flagged));
 			}
 			
 			cursor = coll.find(query);
@@ -158,14 +163,14 @@ public class CommentDAO {
 		}
 	}
 	
-	public void updateComment(Comment comment) {
+	public void updateComment(Comment comment, String commentId) {
 		
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
+			coll = db.getCollection("comments");
 			gson = new Gson();
-			query = new BasicDBObject("_id", comment.get_id());
+			query = new BasicDBObject("_id", new ObjectId(commentId));
 			
 			coll.update(query, (BasicDBObject)JSON.parse(gson.toJson(comment)), true, false);
 			

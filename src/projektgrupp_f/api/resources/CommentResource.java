@@ -22,6 +22,7 @@ public class CommentResource {
 	
 	public CommentResource(String commentId, CommentDAO dao) {
 		this.commentId = commentId;
+		this.dao = dao;
 	}
 	
 	// This method will process HTTP GET requests and it will produce
@@ -45,7 +46,7 @@ public class CommentResource {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void putComment(Comment comment) {
-		dao.updateComment(comment);
+		dao.updateComment(comment, commentId);
 	}
 	
 	// This method will process HTTP DELETE requests

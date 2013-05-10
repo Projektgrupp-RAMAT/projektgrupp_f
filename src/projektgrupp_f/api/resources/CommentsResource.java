@@ -19,7 +19,7 @@ import projektgrupp_f.api.model.Comment;
 * @author Markus Eriksson
 */
 
-@Path("/Comments")
+@Path("/comments")
 public class CommentsResource {
 
 	// Creates the Comment Data Access Object
@@ -32,9 +32,11 @@ public class CommentsResource {
 	public List<Comment> getComments(@QueryParam("restaurantId") String restaurantId, @QueryParam("userId") String userId, @QueryParam("userName") String userName,
 			@QueryParam("soundLvl") String soundLvl, @QueryParam("text") String text, @QueryParam("flagged") String flagged) {
 		
-		if(restaurantId==null && userId==null && userName==null && soundLvl==null && text==null && flagged==null)
+		if(restaurantId==null && userId==null && userName==null && soundLvl==null && text==null && flagged==null) {
+			//System.out.println(dao.getComments().get(0).get_id().toString());
 			return dao.getComments();
-		else
+		}
+		else 
 			return dao.getCommentsByQuery(restaurantId, userId, userName, soundLvl, text, flagged);
 	}
 	
@@ -54,8 +56,8 @@ public class CommentsResource {
 	@Path("count")
 	@GET
 	@Produces(MediaType.TEXT_PLAIN)
-	public long countComments() {
-		return dao.countComments();
+	public String countComments() {
+		return Long.toString(dao.countComments());
 	}
 		
 }

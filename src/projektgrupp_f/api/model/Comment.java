@@ -2,8 +2,6 @@ package projektgrupp_f.api.model;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.bson.types.ObjectId;
-
 /**
 *
 * @author Markus Eriksson
@@ -12,24 +10,24 @@ import org.bson.types.ObjectId;
 @XmlRootElement
 public class Comment {
 
-	private ObjectId _id;
+	private String id;
 	private String restaurantId;
 	private String userId;
 	private String userName;
 	private String soundLvl;
 	private String text;
-	private String flagged;
+	private boolean flagged;
 	
 	public Comment() {
 		
 	}
-	
-	public ObjectId get_id() {
-		return _id;
+
+	public String getId() {
+		return id;
 	}
 
-	public void set_id(String _id) {
-		this._id = new ObjectId(_id);
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 	public String getRestaurantId() {
@@ -72,11 +70,11 @@ public class Comment {
 		this.text = text;
 	}
 
-	public String getFlagged() {
+	public boolean getFlagged() {
 		return flagged;
 	}
 
-	public void setFlagged(String flagged) {
+	public void setFlagged(boolean flagged) {
 		this.flagged = flagged;
 	}
 
