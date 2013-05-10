@@ -4,11 +4,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 import projektgrupp_f.api.model.Comment;
 import projektgrupp_f.api.mongodb.ConnectionMongoDB;
 
 import com.google.gson.Gson;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -27,28 +28,23 @@ public class CommentDAO {
 	private DBCollection coll;
 	private DBCursor cursor;
 	private BasicDBObject query;
-	private List<Comment> list;
 	
 	public List<Comment> getComments() {
-		
-		list = new ArrayList<Comment>();
+
+		List<Comment> list = new ArrayList<Comment>();
 		
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
+			System.out.println(db.isAuthenticated());
+			coll = db.getCollection("comments");
+			gson = new Gson();
 			cursor = coll.find();
-			gson = new Gson();
 			
-			while(cursor.hasNext()) {
-				
-				BasicDBObject[] commentArray = ((BasicDBList)cursor.next().get("comments")).toArray(new BasicDBObject[0]);
-				
-				for(BasicDBObject dbObj : commentArray) 
-					list.add((Comment)gson.fromJson(dbObj.toString(), Comment.class));
-			}
+			while(cursor.hasNext()) 
+				list.add((Comment)gson.fromJson(cursor.next().toString(), Comment.class));
 			
-		} catch(UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -58,43 +54,77 @@ public class CommentDAO {
 			cursor.close();
 			ConnectionMongoDB.closeConnection();
 		}
+		
 		return list;
 	}
 	
-	public List<Comment> getCommentsByQuery(String userId, String userName, String soundLvl) {
-		
-		list = new ArrayList<Comment>();
+	public Comment getCommentById(String commentId) {
+
+		Comment comment = new Comment();
 		
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
 			coll = db.getCollection("restaurants");
-			query = new BasicDBObject();
 			gson = new Gson();
+			query = new BasicDBObject("_id", new ObjectId(commentId));
+			cursor = coll.find(query);
 			
-			if(userName == null && soundLvl == null)
-				query.put("comments.userId", userId);
-			else if(userId == null && soundLvl == null)
-				query.put("comments.userName", userName);
-			else if(userName == null && userId == null)
-				query.put("comments.soundLvl", soundLvl);
+			while(cursor.hasNext())
+				comment = (Comment)gson.fromJson(cursor.next().toString(), Comment.class);
+			
+		} catch (UnknownHostException e) {
+			
+			e.printStackTrace();
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			cursor.close();
+			ConnectionMongoDB.closeConnection();
+		}
+		
+		return comment;
+	}
+	
+	public List<Comment> getCommentsByQuery(String restaurantId, String userId, String userName, String soundLvl, String text, String flagged) {
+
+		List<Comment> list = new ArrayList<Comment>();
+		
+		try {
+			
+			db = ConnectionMongoDB.getConnection();
+			coll = db.getCollection("comments");
+			gson = new Gson();
+			query = new BasicDBObject();
+			
+			if(userId == null && userName == null && soundLvl == null && text == null && flagged == null)
+				query.put("restaurantId", restaurantId);
+			else if(restaurantId == null && userName == null && soundLvl == null && text == null && flagged == null)
+				query.put("userId", userId);
+			else if(userId == null && restaurantId == null && soundLvl == null && text == null && flagged == null)
+				query.put("userName", userName);
+			else if(userId == null && userName == null && restaurantId == null && text == null && flagged == null)
+				query.put("soundLvl", soundLvl);
+			else if(userId == null && userName == null && soundLvl == null && restaurantId == null && flagged == null)
+				query.put("text", text);
+			else if(userId == null && userName == null && soundLvl == null && text == null && restaurantId == null)
+				query.put("flagged", flagged);
 			else {
-				query.put("comments.userId", userId);
-				query.put("comments.userName", userName);
-				query.put("comments.soundLvl", soundLvl);
+				query.put("restaurantId", restaurantId);
+				query.put("userId", userId);
+				query.put("userName", userName);
+				query.put("soundLvl", soundLvl);
+				query.put("text", text);
+				query.put("flagged", flagged);
 			}
 			
 			cursor = coll.find(query);
 			
-			while(cursor.hasNext()) {
-				
-				BasicDBObject[] commentArray = ((BasicDBList)cursor.next().get("comments")).toArray(new BasicDBObject[0]);
-				
-				for(BasicDBObject dbObj : commentArray) 
-					if(dbObj.containsValue(soundLvl) || dbObj.containsValue(userName) || dbObj.containsValue(userId))
-						list.add((Comment)gson.fromJson(dbObj.toString(), Comment.class));	
-			}
-		} catch(UnknownHostException e) {
+			while(cursor.hasNext())
+				list.add((Comment)gson.fromJson(cursor.next().toString(), Comment.class));
+			
+		} catch (UnknownHostException e) {
 			
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -107,105 +137,17 @@ public class CommentDAO {
 		return list;
 	}
 	
-	public List<Comment> getRestaurantComments(String restaurantId) {
-		
-		list = new ArrayList<Comment>();
-		
+	public void postComment(Comment comment) {
+
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
+			coll = db.getCollection("comments");
 			gson = new Gson();
 			
-			if(restaurantId != null) {
-				
-				query = new BasicDBObject("_id", restaurantId);
-				cursor = coll.find(query);
-				
-			} else
-				cursor = coll.find();
-				
-			while(cursor.hasNext()) {
-				
-				BasicDBObject[] commentArray = ((BasicDBList)cursor.next().get("comments")).toArray(new BasicDBObject[0]);
-				
-				for(BasicDBObject dbObj : commentArray)
-					list.add((Comment)gson.fromJson(dbObj.toString(), Comment.class));
-			}
-		} catch(UnknownHostException e) {
+			coll.insert((BasicDBObject)JSON.parse(gson.toJson(comment)));
 			
-			e.printStackTrace();
-			throw new RuntimeException(e);
-			
-		} finally {
-			
-			cursor.close();
-			ConnectionMongoDB.closeConnection();
-		}
-		return list;
-	}
-	
-	public List<Comment> getRestaurantCommentsByQuery(String userId, String userName, String soundLvl, String restaurantId) {
-		
-		list = new ArrayList<Comment>();
-		
-		try {
-			
-			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
-			query = new BasicDBObject();
-			gson = new Gson();
-			
-			if(restaurantId != null)
-				query.put("_id", restaurantId);
-			
-			if(userName == null && soundLvl == null)
-				query.put("comments.userId", userId);
-			else if(userId == null && soundLvl == null)
-				query.put("comments.userName", userName);
-			else if(userName == null && userId == null)
-				query.put("comments.soundLvl", soundLvl);
-			else {
-				query.put("comments.userId", userId);
-				query.put("comments.userName", userName);
-				query.put("comments.soundLvl", soundLvl);
-			}
-			
-			cursor = coll.find(query);
-			
-			while(cursor.hasNext()) {
-				
-				BasicDBObject[] commentArray = ((BasicDBList)cursor.next().get("comments")).toArray(new BasicDBObject[0]);
-				
-				for(BasicDBObject dbObj : commentArray)
-					if(dbObj.containsValue(soundLvl) || dbObj.containsValue(userName) || dbObj.containsValue(userId))
-						list.add((Comment)gson.fromJson(dbObj.toString(), Comment.class));
-			}
-		} catch(UnknownHostException e) {
-			
-			e.printStackTrace();
-			throw new RuntimeException(e);
-			
-		} finally {
-			
-			cursor.close();
-			ConnectionMongoDB.closeConnection();
-		}
-		return list;
-	}
-	
-	public void postComment(String restaurantId, Comment comment) {
-		
-		try {
-			
-			db = ConnectionMongoDB.getConnection();
-			coll = db.getCollection("restaurants");
-			gson = new Gson();
-			query = new BasicDBObject("_id", restaurantId);
-			
-			coll.update(query, new BasicDBObject("$push", new BasicDBObject("comments", (BasicDBObject)JSON.parse(gson.toJson(comment)))), true, false);
-			
-		} catch(UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -216,11 +158,74 @@ public class CommentDAO {
 		}
 	}
 	
-	public void putComment() {
+	public void updateComment(Comment comment) {
 		
+		try {
+			
+			db = ConnectionMongoDB.getConnection();
+			coll = db.getCollection("restaurants");
+			gson = new Gson();
+			query = new BasicDBObject("_id", comment.get_id());
+			
+			coll.update(query, (BasicDBObject)JSON.parse(gson.toJson(comment)), true, false);
+			
+		} catch (UnknownHostException e) {
+			
+			e.printStackTrace();
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			ConnectionMongoDB.closeConnection();
+		}
 	}
 	
-	public void deleteComment() {
+	public boolean deleteComment(String commentId) {
+
+		boolean deleted = false;
 		
+		try {
+			
+			db = ConnectionMongoDB.getConnection();
+			coll = db.getCollection("comments");
+			query = new BasicDBObject("_id", new ObjectId(commentId));
+			
+			coll.remove(query);
+			deleted = true;
+			
+		} catch (UnknownHostException e) {
+			
+			e.printStackTrace();
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			ConnectionMongoDB.closeConnection();
+		}
+		return deleted;
+	}
+	
+	public long countComments() {
+		
+		long numberOfComments;
+		
+		try {
+			
+			db = ConnectionMongoDB.getConnection();
+			coll = db.getCollection("comments");
+			
+			numberOfComments = coll.getCount();
+			
+		} catch (UnknownHostException e) {
+			
+			e.printStackTrace();
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			ConnectionMongoDB.closeConnection();
+		}
+		
+		return numberOfComments;
 	}
 }

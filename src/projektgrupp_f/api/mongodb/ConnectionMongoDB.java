@@ -4,6 +4,7 @@ import java.net.UnknownHostException;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 
 /**
 *
@@ -13,20 +14,27 @@ import com.mongodb.MongoClient;
 public class ConnectionMongoDB {
 
 	private static MongoClient mongoClient;
+	private static DB db;
 	
 	public ConnectionMongoDB() {
 
 	}
 	
-	public static DB getConnection() throws UnknownHostException {
+	public static DB getConnection() throws UnknownHostException, MongoException {
 		
 		try {
 			
 			mongoClient = new MongoClient("localhost", 27017);
-			return mongoClient.getDB("test");
+			
+			db = mongoClient.getDB("test");
+			db.authenticate("markus", "mackan".toCharArray());
+			
+			return db;
 			
 		} catch (UnknownHostException e) {
 			throw e;
+		} catch (MongoException me) {
+			throw me;
 		}
 	}
 	

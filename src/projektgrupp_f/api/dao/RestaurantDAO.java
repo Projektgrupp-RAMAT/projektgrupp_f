@@ -32,10 +32,10 @@ public class RestaurantDAO {
 	public List<Restaurant> getRestaurants() {
 		
 		list = new ArrayList<Restaurant>();
-		
 		try {
 			
 			db = ConnectionMongoDB.getConnection();
+			System.out.println(db.isAuthenticated());
 			coll = db.getCollection("restaurants");
 			gson = new Gson();
 			cursor = coll.find();
