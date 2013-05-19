@@ -1,12 +1,15 @@
 package projektgrupp_f.api.dao;
 
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.bson.types.ObjectId;
 
 import projektgrupp_f.api.model.Comment;
+import projektgrupp_f.api.model.NumberOfComment;
 import projektgrupp_f.api.mongodb.ConnectionMongoDB;
 
 import com.google.gson.Gson;
@@ -16,12 +19,13 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 
 /**
-*
-* @author Markus Eriksson
-*/
-
+ * This class have the methods that handles the data access from and to the database.
+ * 
+ * @author Markus Eriksson
+ */
 public class CommentDAO {
 
 	private Gson gson;
@@ -30,11 +34,16 @@ public class CommentDAO {
 	private DBCursor cursor;
 	private BasicDBObject query;
 	
+	/**
+	 * This method get all the comments from the database.
+	 * 
+	 * @return					Returns a list of all the comments.
+	 */
 	public List<Comment> getComments() {
 
 		List<Comment> list = new ArrayList<Comment>();
 		DBObject dbo;
-		Comment cmnt;
+		Comment comment;
 		
 		try {
 			
@@ -46,9 +55,9 @@ public class CommentDAO {
 			
 			while(cursor.hasNext()) {
 				dbo = cursor.next();
-				cmnt = (Comment)gson.fromJson(dbo.toString(), Comment.class);
-				cmnt.setId(dbo.get("_id").toString());
-				list.add(cmnt);
+				comment = (Comment)gson.fromJson(dbo.toString(), Comment.class);
+				comment.setId(dbo.get("_id").toString());
+				list.add(comment);
 			}
 		} catch (UnknownHostException e) {
 			
@@ -64,9 +73,16 @@ public class CommentDAO {
 		return list;
 	}
 	
+	/**
+	 * This method gets a comment with a unique id from the database.
+	 * 
+	 * @param commentId			The unique id for the comment.
+	 * @return					Returns a comment.
+	 */
 	public Comment getCommentById(String commentId) {
 
 		Comment comment = new Comment();
+		DBObject dbo;
 		
 		try {
 			
@@ -76,9 +92,11 @@ public class CommentDAO {
 			query = new BasicDBObject("_id", new ObjectId(commentId));
 			cursor = coll.find(query);
 			
-			while(cursor.hasNext())
-				comment = (Comment)gson.fromJson(cursor.next().toString(), Comment.class);
-			
+			while(cursor.hasNext()) {
+				dbo = cursor.next();
+				comment = (Comment)gson.fromJson(dbo.toString(), Comment.class);
+				comment.setId(dbo.get("_id").toString());
+			}
 		} catch (UnknownHostException e) {
 			
 			e.printStackTrace();
@@ -92,9 +110,22 @@ public class CommentDAO {
 		return comment;
 	}
 	
+	/**
+	 * This method gets comments by a query from the database.
+	 * 
+	 * @param restaurantId		Restaurant id on the comments you want to search for.
+	 * @param userId			User id on the comments you want to search for.
+	 * @param userName			User name on the comments you want to search for.
+	 * @param soundLvl			Sound level on the comments you want to search for.
+	 * @param text				Text on the comments you want to search for.
+	 * @param flagged			If the comments are flagged or not (true or false).
+	 * @return					Returns a list of requested comments.
+	 */
 	public List<Comment> getCommentsByQuery(String restaurantId, String userId, String userName, String soundLvl, String text, String flagged) {
 
 		List<Comment> list = new ArrayList<Comment>();
+		DBObject dbo;
+		Comment comment;
 		
 		try {
 			
@@ -126,8 +157,12 @@ public class CommentDAO {
 			
 			cursor = coll.find(query);
 			
-			while(cursor.hasNext())
-				list.add((Comment)gson.fromJson(cursor.next().toString(), Comment.class));
+			while(cursor.hasNext()) {
+				dbo = cursor.next();
+				comment = (Comment)gson.fromJson(dbo.toString(), Comment.class);
+				comment.setId(dbo.get("_id").toString());
+				list.add(comment);
+			}
 			
 		} catch (UnknownHostException e) {
 			
@@ -142,6 +177,11 @@ public class CommentDAO {
 		return list;
 	}
 	
+	/**
+	 * This method inserts a comment to the database.
+	 * 
+	 * @param comment			The comment you want to insert.
+	 */
 	public void postComment(Comment comment) {
 
 		try {
@@ -149,6 +189,10 @@ public class CommentDAO {
 			db = ConnectionMongoDB.getConnection();
 			coll = db.getCollection("comments");
 			gson = new Gson();
+			
+			Date date= new Date();
+	    	String timeStamp = new Timestamp(date.getTime()).toString().substring(0, 16);
+			comment.setTimeStamp(timeStamp);
 			
 			coll.insert((BasicDBObject)JSON.parse(gson.toJson(comment)));
 			
@@ -163,6 +207,12 @@ public class CommentDAO {
 		}
 	}
 	
+	/**
+	 * This method updates a comment on the database.
+	 * 
+	 * @param comment			The comment with the update.
+	 * @param commentId			Id for the comment you want to update.
+	 */
 	public void updateComment(Comment comment, String commentId) {
 		
 		try {
@@ -185,6 +235,12 @@ public class CommentDAO {
 		}
 	}
 	
+	/**
+	 * This method deletes a comment on the database.
+	 * 
+	 * @param commentId			Id for the comment you want to delete.
+	 * @return					Returns a boolean if the delete was successful.
+	 */
 	public boolean deleteComment(String commentId) {
 
 		boolean deleted = false;
@@ -210,6 +266,11 @@ public class CommentDAO {
 		return deleted;
 	}
 	
+	/**
+	 * This method counts the comments on the database.
+	 * 
+	 * @return					Returns the number of comments on the database.
+	 */
 	public long countComments() {
 		
 		long numberOfComments;
@@ -232,5 +293,55 @@ public class CommentDAO {
 		}
 		
 		return numberOfComments;
+	}
+	
+	/**
+	 * This method gets the top ten commented restaurants from the database.
+	 * 
+	 * @return					Returns a list of the top ten restaurants.
+	 */
+	public List<NumberOfComment> getTopTen() {
+		
+		List<String> list = new ArrayList<String>();
+		List<NumberOfComment> nocList = new ArrayList<NumberOfComment>();
+		DBObject dbo;
+		
+		try {
+			
+			db = ConnectionMongoDB.getConnection();
+			System.out.println("Authenticated: " + db.isAuthenticated());
+			coll = db.getCollection("comments");
+			gson = new Gson();
+			cursor = coll.find();
+			
+			while(cursor.hasNext()) {
+				dbo = cursor.next();
+				dbo.get("restaurantId");
+				
+				if(!list.contains((String)dbo.get("restaurantId")))
+					list.add((String)dbo.get("restaurantId"));
+			}
+			
+			for(String s : list) {
+				
+				query = new BasicDBObject("restaurantId", s);
+				nocList.add(new NumberOfComment(s, coll.find(query).count()));
+			}
+			
+			java.util.Collections.sort(nocList);
+			nocList = nocList.subList(0, 10);
+
+		} catch (UnknownHostException e) {
+			
+			e.printStackTrace();
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			cursor.close();
+			ConnectionMongoDB.closeConnection();
+		}
+		
+		return nocList;
 	}
 }

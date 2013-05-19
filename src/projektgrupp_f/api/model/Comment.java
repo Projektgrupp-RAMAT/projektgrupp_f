@@ -3,10 +3,9 @@ package projektgrupp_f.api.model;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
-*
-* @author Markus Eriksson
-*/
-
+ *
+ * @author Markus Eriksson
+ */
 @XmlRootElement
 public class Comment {
 
@@ -17,6 +16,7 @@ public class Comment {
 	private String soundLvl;
 	private String text;
 	private boolean flagged;
+	private String timeStamp;
 	
 	public Comment() {
 		
@@ -70,12 +70,20 @@ public class Comment {
 		this.text = text;
 	}
 
-	public boolean getFlagged() {
+	public boolean isFlagged() {
 		return flagged;
 	}
 
 	public void setFlagged(boolean flagged) {
 		this.flagged = flagged;
+	}
+
+	public String getTimeStamp() {
+		return timeStamp;
+	}
+
+	public void setTimeStamp(String timeStamp) {
+		this.timeStamp = timeStamp;
 	}
 
 }

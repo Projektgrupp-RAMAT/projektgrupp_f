@@ -5,11 +5,10 @@ import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 /**
-*
-* @author Markus Eriksson
-*/
-
-public class myCORSFilter implements ContainerResponseFilter {
+ *
+ * @author Markus Eriksson
+ */
+public class CORSFilter implements ContainerResponseFilter {
 
 	@Override
 	public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
