@@ -17,6 +17,8 @@ public class Comment {
 	private String text;
 	private boolean flagged;
 	private String timeStamp;
+	private double lat;
+	private double lon;
 	
 	public Comment() {
 		
@@ -85,5 +87,22 @@ public class Comment {
 	public void setTimeStamp(String timeStamp) {
 		this.timeStamp = timeStamp;
 	}
+
+	public double getLat() {
+		return lat;
+	}
+
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+
+	public double getLon() {
+		return lon;
+	}
+
+	public void setLon(double lon) {
+		this.lon = lon;
+	}
+
 
 }

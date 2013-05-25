@@ -11,13 +11,17 @@ public class NumberOfComment implements Comparable<Object> {
 
 	private String restaurantId;
 	private int numberOfComments;
+	private double lat;
+	private double lon;
 	
 	public NumberOfComment() {
 		
 	}
 	
-	public NumberOfComment(String restaurantId, int numberOfComments) {
+	public NumberOfComment(String restaurantId, double lat, double lon, int numberOfComments) {
 		this.restaurantId = restaurantId;
+		this.lat = lat;
+		this.lon = lon;
 		this.numberOfComments = numberOfComments;
 	}
 	
@@ -36,7 +40,23 @@ public class NumberOfComment implements Comparable<Object> {
 	public void setNumberOfComments(int numberOfComments) {
 		this.numberOfComments = numberOfComments;
 	}
+	
+	public double getLat() {
+		return lat;
+	}
 
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+
+	public double getLon() {
+		return lon;
+	}
+
+	public void setLon(double lon) {
+		this.lon = lon;
+	}
+	
 	@Override
 	public int compareTo(Object o) {
 		
@@ -48,5 +68,4 @@ public class NumberOfComment implements Comparable<Object> {
             return 1;
 		
 	}
-	
 }

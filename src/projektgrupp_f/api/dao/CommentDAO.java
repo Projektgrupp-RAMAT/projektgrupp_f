@@ -19,7 +19,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 
 /**
  * This class have the methods that handles the data access from and to the database.
@@ -302,7 +301,9 @@ public class CommentDAO {
 	 */
 	public List<NumberOfComment> getTopTen() {
 		
-		List<String> list = new ArrayList<String>();
+		List<String> restaurantIdList = new ArrayList<String>();
+		List<Double> latList = new ArrayList<Double>();
+		List<Double> lonList = new ArrayList<Double>();
 		List<NumberOfComment> nocList = new ArrayList<NumberOfComment>();
 		DBObject dbo;
 		
@@ -315,21 +316,28 @@ public class CommentDAO {
 			cursor = coll.find();
 			
 			while(cursor.hasNext()) {
-				dbo = cursor.next();
-				dbo.get("restaurantId");
 				
-				if(!list.contains((String)dbo.get("restaurantId")))
-					list.add((String)dbo.get("restaurantId"));
+				dbo = cursor.next();
+				
+				if(!restaurantIdList.contains((String)dbo.get("restaurantId"))) {
+					latList.add((double)dbo.get("lat"));
+					lonList.add((double)dbo.get("lon"));
+					restaurantIdList.add((String)dbo.get("restaurantId"));
+				}
 			}
 			
-			for(String s : list) {
+			for(int i = 0; i < restaurantIdList.size(); i++) {
 				
-				query = new BasicDBObject("restaurantId", s);
-				nocList.add(new NumberOfComment(s, coll.find(query).count()));
+				query = new BasicDBObject("restaurantId", restaurantIdList.get(i));
+				nocList.add(new NumberOfComment(restaurantIdList.get(i), latList.get(i), lonList.get(i), coll.find(query).count()));
 			}
 			
 			java.util.Collections.sort(nocList);
-			nocList = nocList.subList(0, 10);
+			
+			if(nocList.size() > 10)
+				nocList = nocList.subList(0, 10);
+			else
+				nocList = nocList.subList(0, nocList.size());
 
 		} catch (UnknownHostException e) {
 			
@@ -345,3 +353,5 @@ public class CommentDAO {
 		return nocList;
 	}
 }
+
+
